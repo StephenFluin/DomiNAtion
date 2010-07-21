@@ -2,9 +2,9 @@
 
 
 import sys,random
+from color import echo
 
 def main():
-	print "Creating cards"
 	g = Game()
 	g.addPlayer("stephen")
 	
@@ -17,7 +17,6 @@ def match(cardName, stack):
 		
 		for c in stack:
 			if c.name.lower() == cardName.lower():
-				stack.remove(c)
 				return c
 	else:
 		for s in stack:
@@ -40,21 +39,23 @@ def runConsoleGame(game):
 			
 			print "Supplies:",
 			for c in g.supplies:
-				print "%s (%s)" % (c[0].name, len(c)),
+				print "%s (Cost: %s, Left:%s)" % (c[0].name, c[0].cost, len(c)),
 			print
 			p.actions = 1
 			p.buys = 1
-			
+			p.cash = 0
 			
 			#Action Phase
 			while p.actions > 0:
-				print "Enter the name of an action card or type skip:"
+				print "Enter the name of an action card or type skip:",
 				line = getCardName()
 				if line != "":
 					card = match(line,p.hand)
-					print "You entered '%s'." % (line)
 					if card and card.isActionable():
+						p.hand.remove(card)
+						p.discard.append(card)
 						card.performAction(p, g)
+						
 					else:
 						p.actions += 1
 				p.actions -= 1
@@ -62,11 +63,20 @@ def runConsoleGame(game):
 			
 			#Buy Phase
 			while p.buys > 0:
-				print "Enter the name of a card you wish to buy:"
+				p.updateCash()
+				print "Cash on hand: %s" % (p.cash)
+				print "Enter the name of a card you wish to buy:",
 				line = getCardName()
-				card = match(line,g.supplies)
-				if card:
-					p.discard.append(card)
+				if line != "":
+					card = match(line,g.supplies)
+					if card and p.cash >= card.cost:
+						g.removeSupplyCard(card)
+						p.discard.append(card)
+						p.cash -= card.cost
+					elif p.cash < card.cost:
+						print "Insufficient funds for that card."
+						p.buys += 1
+						
 				p.buys -= 1
 			
 			p.endTurn()
@@ -101,14 +111,40 @@ class Game():
 			silvers.append(Silver())
 			coppers.append(Copper())
 			
-		stack = range(10)
-		for i in range(10):
-			stack.append(Smithy())
+		stack = [[] for row in range(5)]
+		# 10 cards for each supply, don't take bottom one
+		for i in range(11):
+			stack[0].append(Smithy())
+			stack[1].append(Market())
+			stack[2].append(Laboratory())
+			stack[3].append(Village())
+			stack[4].append(Festival())
+			
 		self.supplies.extend([provinces, duchies, estates, golds, silvers, coppers])
 		self.supplies.extend(stack)
 	
+	# Add a player to the game
 	def addPlayer(self,name):
 		self.players.append(Player(self,name))
+		
+	#def tidyCard(self,card):
+	#	print "tidyCard is putting away a %s" % (card)
+	#	for stack in self.supplies:
+	#		if stack[0].name == card.name:
+	#			stack.append(card)
+	#			return
+	
+	# Remove a card from the appropriate pile
+	def removeSupplyCard(self,card):
+		for stack in self.supplies:
+			if stack[0].name == card.name:
+				stack.remove(card)
+				return
+	
+	# Present a list of cards to the user and let them pick one
+	def pickCardFromStack(self,cardName,stack):
+		pass
+		
 
 
 class Player():
@@ -117,6 +153,7 @@ class Player():
 		self.hand = []
 		self.deck = []
 		self.discard = []
+		self.cash = 0
 		for i in range(7):
 			self.deck.append(game.supplies[5].pop())
 		for i in range(3):
@@ -137,28 +174,43 @@ class Player():
 	def endTurn(self):
 		while len(self.hand) >0:
 			self.discard.append(self.hand.pop())
+			
+	def updateCash(self):
+		i = len(self.hand) - 1
+		while i >= 0:
+			c = self.hand[i]
+			if isinstance(c,Treasure):
+				self.cash += c.getWorth()
+				self.hand.remove(c)
+				self.discard.append(c)
+				
+			i -= 1
 	
 	def showHand(self):
 		print "Hand:",
-		for c in self.hand:
-			print "%s" % (c.name),
-		print
+		printCardList(self.hand)
 		
 	def debugDeck(self):
 		print "Deck:",
-		for c in self.deck:
-			print "%s" % (c.name),
-		print
+		printCardList(self.deck)
 		
 	def showDiscard(self):
 		print "Discard:",
-		for c in self.discard:
-			print "%s" % (c.name),
-		print
+		printCardList(self.discard)
 			
 				
 				
-			
+def printCardList(list):
+	for c in list:
+		if isinstance(c,VictoryCard):
+			echo('green')
+		if isinstance(c,Treasure):
+			echo('yellow')
+		if isinstance(c,Action):
+			echo('white')
+		print "%s " % (c.name),
+		echo('none')
+	print		
 		
 
 class Card():
@@ -234,7 +286,8 @@ class Smithy(Action):
 	def performAction(self, p, g):
 		p.drawCards(g,3)
 		p.showHand()
-class Laboratory(Action)
+		
+class Laboratory(Action):
 	def __init__(self):
 		Action.__init__(self,5)
 		self.name = "Laboratory"
@@ -243,7 +296,7 @@ class Laboratory(Action)
 		p.drawCards(g,2)
 		p.showHand()
 		
-class Market(Action)
+class Market(Action):
 	def __init__(self):
 		Action.__init__(self,5)
 		self.name = "Market"
@@ -254,5 +307,23 @@ class Market(Action)
 		p.drawCards(g,1)
 		p.showHand()
 		
+class Village(Action):
+	def __init__(self):
+		Action.__init__(self,3)
+		self.name = "Village"
+	def performAction(self,p,g):
+		p.actions+= 2
+		p.drawCards(g,1)
+		p.showHand()
+		
+class Festival(Action):
+	def __init__(self):
+		Action.__init__(self,5)
+		self.name = "Festival"
+	def performAction(self,p,g):
+		p.actions+= 2
+		p.buys += 1
+		p.cash +=2
+		p.showHand()
 		
 main()
