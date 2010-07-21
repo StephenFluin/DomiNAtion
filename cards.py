@@ -125,3 +125,44 @@ class Cellar(Action):
 			p.hand.remove(c)
 		p.drawCards(g,len(discards))
 		p.showHand()
+		
+class Chancellor(Action):
+	def __init__(self):
+		Action.__init__(self,3)
+		self.name = "Chancellor"
+	
+	def performAction(self,p,g):
+		p.cash += 2
+		print "Do you want to immediately put your deck into your discard pile?"
+		line = g.getCleanLine()
+		if line == "y" or line == "yes":
+			p.discard.extend(p.deck)
+			p.deck = []
+			
+class CouncilRoom(Action):
+	def __init__(self):
+		Action.__init__(self,5)
+		self.name = "Council Room"
+	def performAction(self,p,g):
+		p.drawCards(g,4)
+		p.buys += 1
+		for player in g.players:
+			if p != player:
+				player.drawCards(g,1)
+				
+class Remodel(Action):
+	def __init__(self):
+		Action.__init__(self,4)
+		self.name = "Remodel"
+	def performAction(self,p,g):
+		print "What card do you want to remodel?",
+		victim = g.chooseCard(p.hand)
+		if victim:
+			p.hand.remove(victim)
+			g.trash.append(victim)
+			
+			print "Allow purchase of card worth %s." % (victim.cost + 2)
+			
+		else:
+			print "Error: victim for remodel not chosen"
+		

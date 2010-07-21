@@ -70,10 +70,10 @@ def runConsoleGame(game):
 				
 				print "Cash on hand: %s" % (p.cash)
 				print "Enter the name of a card you wish to buy:",
-				line = getCardName()
+				line = g.getCleanLine()
 				if line != "":
 					card = match(line,g.supplies)
-					if card and p.cash >= card.cost:
+					if card and p.cash >= card.cost and not g.isLastCard(card):
 						g.removeSupplyCard(card)
 						p.discard.append(card)
 						p.cash -= card.cost
@@ -86,10 +86,7 @@ def runConsoleGame(game):
 			
 			p.endTurn()
 			
-def getCardName():
-	line = sys.stdin.readline()
-	line = line.strip('\n\r')
-	return line
+
 				
 
 class Game():
@@ -116,7 +113,7 @@ class Game():
 			silvers.append(Silver())
 			coppers.append(Copper())
 			
-		stack = [[] for row in range(6)]
+		stack = [[] for row in range(9)]
 		# 10 cards for each supply, don't take bottom one
 		for i in range(11):
 			stack[0].append(Smithy())
@@ -125,6 +122,9 @@ class Game():
 			stack[3].append(Village())
 			stack[4].append(Festival())
 			stack[5].append(Cellar())
+			stack[6].append(Chancellor())
+			stack[7].append(CouncilRoom())
+			stack[8].append(Remodel())
 			
 		self.supplies.extend([provinces, duchies, estates, golds, silvers, coppers])
 		self.supplies.extend(stack)
@@ -167,13 +167,23 @@ class Game():
 	def chooseCard(self,stack, test = lambda x: True):
 		print "\nOptions:",
 		printCardList(stack, test)
-		line = getCardName()
+		line = self.getCleanLine()
 		if line != "":
 			card = match(line,stack)
 			if card and test(card):
 				return card
 		return None
 		
+	def isLastCard(self,card):
+		for stack in self.supplies:
+			if stack[0].name == card.name:
+				return len(stack) <= 1
+		return None
+	
+	def getCleanLine(self):
+		line = sys.stdin.readline()
+		line = line.strip('\n\r')
+		return line
 		
 
 
