@@ -4,6 +4,7 @@
 import sys,random
 from color import echo
 
+
 def main():
 	g = Game()
 	g.addPlayer("stephen")
@@ -48,16 +49,16 @@ def runConsoleGame(game):
 			#Action Phase
 			while p.actions > 0:
 				print "Enter the name of an action card or type skip:",
-				line = getCardName()
-				if line != "":
-					card = match(line,p.hand)
-					if card and card.isActionable():
-						p.hand.remove(card)
-						p.discard.append(card)
-						card.performAction(p, g)
-						
-					else:
-						p.actions += 1
+				card = g.chooseCard(p.hand, lambda x: x and x.isActionable())
+				if card and card.isActionable():
+					p.hand.remove(card)
+					p.discard.append(card)
+					card.performAction(p, g)
+					
+				elif card:
+					p.actions += 1
+				else: 
+					p.actions = 0
 				p.actions -= 1
 			
 			
@@ -111,7 +112,7 @@ class Game():
 			silvers.append(Silver())
 			coppers.append(Copper())
 			
-		stack = [[] for row in range(5)]
+		stack = [[] for row in range(6)]
 		# 10 cards for each supply, don't take bottom one
 		for i in range(11):
 			stack[0].append(Smithy())
@@ -119,6 +120,7 @@ class Game():
 			stack[2].append(Laboratory())
 			stack[3].append(Village())
 			stack[4].append(Festival())
+			stack[5].append(Cellar())
 			
 		self.supplies.extend([provinces, duchies, estates, golds, silvers, coppers])
 		self.supplies.extend(stack)
@@ -142,8 +144,32 @@ class Game():
 				return
 	
 	# Present a list of cards to the user and let them pick one
-	def pickCardFromStack(self,cardName,stack):
-		pass
+	def chooseCards(self,stack):
+		ret = []
+		while True:
+			card = self.chooseCard(stack)
+			
+			if not card:
+				break
+			else:
+				ret.append(card)
+				stack.remove(card)
+		for c in ret:
+			stack.append(c)
+		return ret
+			
+			
+		
+	def chooseCard(self,stack, test = lambda x: True):
+		print "\nOptions:",
+		printCardList(stack, test)
+		line = getCardName()
+		if line != "":
+			card = match(line,stack)
+			if card and test(card):
+				return card
+		return None
+		
 		
 
 
@@ -197,10 +223,9 @@ class Player():
 	def showDiscard(self):
 		print "Discard:",
 		printCardList(self.discard)
-			
+
 				
-				
-def printCardList(list):
+def printCardList(list, test = lambda x: True):
 	for c in list:
 		if isinstance(c,VictoryCard):
 			echo('green')
@@ -208,7 +233,8 @@ def printCardList(list):
 			echo('yellow')
 		if isinstance(c,Action):
 			echo('white')
-		print "%s " % (c.name),
+		if test(c):
+			print "%s " % (c.name),
 		echo('none')
 	print		
 		
@@ -325,5 +351,19 @@ class Festival(Action):
 		p.buys += 1
 		p.cash +=2
 		p.showHand()
+class Cellar(Action):
+	def __init__(self):
+		Action.__init__(self,2)
+		self.name = "Cellar"
+	
+	def performAction(self,p,g):
+		p.actions += 1
+		print "What cards do you want to discard?"
+		discards = g.chooseCards(p.hand)
 		
+		for c in discards:
+			p.discard.append(c)
+			p.hand.remove(c)
+		p.drawCards(g,len(discards))
+		p.showHand()
 main()
