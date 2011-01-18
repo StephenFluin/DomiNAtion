@@ -62,54 +62,19 @@ class Copper(Treasure):
 class Action(Card):
 	def isActionable(self):
 		return True
+		
+# Try to keep the action cards organized alphabetically
 
-class Smithy(Action):
+class Bureaucrat(Action):
 	def __init__(self):
 		Action.__init__(self,4)
-		self.name = "Smithy"
-		
-	def performAction(self, p, g):
-		p.drawCards(g,3)
-		p.showHand()
-		
-class Laboratory(Action):
-	def __init__(self):
-		Action.__init__(self,5)
-		self.name = "Laboratory"
+		self.name = "Bureaucrat"
 	def performAction(self,p,g):
-		p.actions+= 1
-		p.drawCards(g,2)
-		p.showHand()
-		
-class Market(Action):
-	def __init__(self):
-		Action.__init__(self,5)
-		self.name = "Market"
-	def performAction(self,p,g):
-		p.actions+= 1
-		p.buys += 1
-		p.cash +=1
-		p.drawCards(g,1)
-		p.showHand()
-		
-class Village(Action):
-	def __init__(self):
-		Action.__init__(self,3)
-		self.name = "Village"
-	def performAction(self,p,g):
-		p.actions+= 2
-		p.drawCards(g,1)
-		p.showHand()
-		
-class Festival(Action):
-	def __init__(self):
-		Action.__init__(self,5)
-		self.name = "Festival"
-	def performAction(self,p,g):
-		p.actions+= 2
-		p.buys += 1
-		p.cash +=2
-		p.showHand()
+		if(len(g.silvers) > 0):
+			p.deck.insert(0,g.silvers.pop())
+		else:
+			print "Wasted the action because no more silvers are available."
+
 class Cellar(Action):
 	def __init__(self):
 		Action.__init__(self,2)
@@ -139,6 +104,26 @@ class Chancellor(Action):
 			p.discard.extend(p.deck)
 			p.deck = []
 			
+class Chapel(Action):
+	def __init__(self):
+		Action.__init__(self,2)
+		self.name = "Chapel"
+		
+	def performAction(self,p,g):
+		print "What cards do you want to trash (up to 4)?"
+		discards = g.chooseCards(p.hand)
+		
+		count = 0
+		for c in discards:
+			count += 1
+			if count > 4:
+				break
+			
+			p.hand.remove(c)
+		p.showHand()
+		
+		
+			
 class CouncilRoom(Action):
 	def __init__(self):
 		Action.__init__(self,5)
@@ -149,7 +134,77 @@ class CouncilRoom(Action):
 		for player in g.players:
 			if p != player:
 				player.drawCards(g,1)
-				
+
+class Feast(Action):
+	def __init__(self):
+		Action.__init__(self,4)
+		self.name = "Feast"
+	def performAction(self,p,g):
+		p.drawCards(g,1)
+		p.actions += 1
+		p.showHand()
+		
+class Festival(Action):
+	def __init__(self):
+		Action.__init__(self,5)
+		self.name = "Festival"
+	def performAction(self,p,g):
+		p.actions+= 2
+		p.buys += 1
+		p.cash +=2
+		p.showHand()
+		
+		
+class Laboratory(Action):
+	def __init__(self):
+		Action.__init__(self,5)
+		self.name = "Laboratory"
+	def performAction(self,p,g):
+		p.actions+= 1
+		p.drawCards(g,2)
+		p.showHand()
+		
+		
+class Market(Action):
+	def __init__(self):
+		Action.__init__(self,5)
+		self.name = "Market"
+	def performAction(self,p,g):
+		p.actions+= 1
+		p.buys += 1
+		p.cash +=1
+		p.drawCards(g,1)
+		p.showHand()
+		
+class Militia(Action):
+	def __init__(self):
+		Action.__init__(self,4)
+		self.name = "Militia"
+	def performAction(self,p,g):
+		p.cash += 2
+	
+class Moat(Action):
+	def __init__(self):
+		Action.__init__(self,2)
+		self.name = "Moat"
+	def performAction(self,p,g):
+		p.drawCards(g,2)
+		p.showHand()
+		
+class Moneylender(Action):
+	def __init__(self):
+		Action.__init__(self,4)
+		self.name = "Moneylender"
+	def performAction(self,p,g):
+		for c in p.hand:
+			if isinstance(c,Copper):
+				p.hand.remove(c)
+				p.cash += 3
+				p.showHand()
+				break
+			
+			
+
 class Remodel(Action):
 	def __init__(self):
 		Action.__init__(self,4)
@@ -165,4 +220,55 @@ class Remodel(Action):
 			
 		else:
 			print "Error: victim for remodel not chosen"
+		
+class Smithy(Action):
+	def __init__(self):
+		Action.__init__(self,4)
+		self.name = "Smithy"
+		
+	def performAction(self, p, g):
+		p.drawCards(g,3)
+		p.showHand()
+		
+class Spy(Action):
+	def __init__(self):
+		Action.__init__(self,4)
+		self.name = "Spy"
+	def performAction(self,p,g):
+		p.drawCards(g,1)
+		p.actions += 1
+		p.showHand()
+		
+class Thief(Action):
+	def __init__(self):
+		Action.__init__(self,4)
+		self.name = "Thief"
+	def performAction(self,p,g):
+		p.showHand()
+		
+class Village(Action):
+	def __init__(self):
+		Action.__init__(self,3)
+		self.name = "Village"
+	def performAction(self,p,g):
+		p.actions+= 2
+		p.drawCards(g,1)
+		p.showHand()
+		
+class Woodcutter(Action):
+	def __init__(self):
+		Action.__init__(self,3)
+		self.name = "Woodcutter"
+	def performAction(self,p,g):
+		p.buys += 1
+		p.cash += 2
+		
+class Workshop(Action):
+	def __init__(self):
+		Action.__init__(self,3)
+		self.name = "Workshop"
+	def performAction(self,p,g):
+		p.drawCards(g,1)
+		p.actions += 1
+		p.showHand()
 		

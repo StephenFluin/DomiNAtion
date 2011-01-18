@@ -113,18 +113,30 @@ class Game():
 			silvers.append(Silver())
 			coppers.append(Copper())
 			
-		stack = [[] for row in range(9)]
+		stack = [[] for row in range(19)]
 		# 10 cards for each supply, don't take bottom one
 		for i in range(11):
-			stack[0].append(Smithy())
-			stack[1].append(Market())
-			stack[2].append(Laboratory())
-			stack[3].append(Village())
-			stack[4].append(Festival())
-			stack[5].append(Cellar())
-			stack[6].append(Chancellor())
-			stack[7].append(CouncilRoom())
-			stack[8].append(Remodel())
+			stack[0].append(Bureaucrat())
+			stack[1].append(Cellar())
+			stack[2].append(Chancellor())
+			stack[3].append(CouncilRoom())
+			stack[4].append(Chapel())
+			stack[5].append(Feast())
+			stack[6].append(Festival())
+			stack[7].append(Laboratory())
+			stack[8].append(Market())
+			stack[9].append(Moat())
+			stack[10].append(Militia())
+			stack[11].append(Moneylender())
+			stack[12].append(Remodel())
+			stack[13].append(Smithy())
+			stack[14].append(Spy())
+			stack[15].append(Thief())
+			stack[16].append(Village())
+			stack[17].append(Woodcutter())
+			stack[18].append(Workshop())
+			
+			
 			
 		self.supplies.extend([provinces, duchies, estates, golds, silvers, coppers])
 		self.supplies.extend(stack)
